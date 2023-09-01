@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RoTel Viewer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  </head>
+  <body data-bs-theme="dark">
+    <div class="container mt-3">
+      <div class="row">
+        <div class="col-12 gy-5 text-center">
+          <h1>RoTel Viewer</h1>
+        </div>
+        <div class="col-12">
+          <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="file-tab" data-bind="css: { active: vm.selectedTabIndex() == 0 }" data-bs-toggle="tab" data-bs-target="#file" type="button" aria-controls="file">Select Data</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="chart-tab" data-bind="css: { active: vm.selectedTabIndex() == 1 }" data-bs-toggle="tab" data-bs-target="#charts" type="button" aria-controls="charts">View Charts</button>
+            </li>
+          </ul>
+          <div class="tab-content">
+            <div class="tab-pane mt-3" id="file" data-bind="css: { active: vm.selectedTabIndex() == 0 }" role="tabpanel" aria-labelledby="file-tab" tabindex="0">
+              <div class="container">
+                <div class="row">
+                  <div class="col-12">
+                    <div class="row mb-3 gy-3">
+                      <label class="col-sm-2 col-form-label text-end" for="csvFile">CSV File</label>
+                      <div class="col-sm-10">
+                        <input class="form-control" id="csvFile" type="file" data-bind="event: { change: function() { vm.csv.file($element.files[0]); } }" accept=".csv">
+                      </div>
+                      <label class="col-sm-2 col-form-label text-end" for="encoding">Encoding</label>
+                      <div class="col-sm-10">
+                        <select class="form-control" id="encoding" data-bind="options: vm.csv.encodings, value: vm.csv.encoding"></select>
+                      </div>
+                      <div class="col-sm-10 offset-sm-2">
+                        <div class="form-check">
+                          <input class="form-check-input" id="firstRowHeaders" type="checkbox" data-bind="checked: vm.csv.firstRowHeaders">
+                          <label class="form-check-label" for="firstRowHeaders">First Row Contains Column Headers</label>
+                        </div>
+                      </div>
+                      <div class="col-sm-10 offset-sm-2">
+                        <div class="form-check">
+                          <input class="form-check-input" id="ignoreFirstRow" type="checkbox" data-bind="checked: vm.csv.ignoreFirstRow">
+                          <label class="form-check-label" for="ignoreFirstRow">Discard First Row of Data</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="row" data-bind="if: vm.csv.file">
+                  <div class="col-3 offset-9">
+                    <div class="row mb-3 gy-3">
+                      <label class="col-sm-7 col-form-label text-end" for="pageLength">Encoding</label>
+                      <div class="col-sm-5">
+                        <select class="form-control" id="pageLength" data-bind="options: vm.pageLengths, value: vm.table.pageLength"></select>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-12 mb-3">
+                    <table class="table table-sm table-hover">
+                      <thead>
+                        <tr data-bind="foreach: vm.csv.headers">
+                          <th data-bind="text: $data"></th>
+                        </tr>
+                      </thead>
+
+                      <tbody class="table-group-divider" data-bind="foreach: vm.table.pagedData">
+                        <tr data-bind="foreach: $data">
+                          <td data-bind="text: $data"></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <div class="btn-group" role="group">
+                      <button type="button" class="btn btn-outline-primary" data-bind="click: function () { vm.table.currentPage(0) }">&lt;&lt;&nbsp;First</button>
+                      <button type="button" class="btn btn-outline-primary" data-bind="click: function () { vm.table.currentPage(Math.max(0, vm.table.currentPage() - 1)) }">&lt;&nbsp;Previous</button>
+                      <button type="button" class="btn btn-outline-primary" data-bind="visible: vm.table.currentPage() > 2">...</button>
+                      <!-- ko foreach: vm.table.pages-->
+                      <button type="button" data-bind="visible: Math.abs(vm.table.currentPage() - $data) < (3 + Math.max(0, 3 - vm.table.currentPage())), css: vm.table.currentPage() == $data ? 'btn btn-primary' : 'btn btn-outline-primary', text: $data + 1, click: vm.table.currentPage"></button>
+                      <!-- /ko -->
+                      <button type="button" class="btn btn-outline-primary" data-bind="visible: vm.table.currentPage() < (vm.table.pages().length - 3)">...</button>
+                      <button type="button" class="btn btn-outline-primary" data-bind="click: function () { vm.table.currentPage(Math.min(vm.table.pages().length - 1, vm.table.currentPage() + 1)) }">Next&nbsp;&gt;</button>
+                      <button type="button" class="btn btn-outline-primary" data-bind="click: function () { vm.table.currentPage(vm.table.pages().length - 1) }">Last&nbsp;&gt;&gt;</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="tab-pane mt-3" id="charts" data-bind="css: { active: vm.selectedTabIndex() == 1 }" role="tabpanel" aria-labelledby="chart-tab" tabindex="0">
+              <div class="container">
+                <div class="row row-cols-1 g-4 mb-4" data-bind="foreach: vm.charts">
+
+                  <!-- Charts -->
+                  <div class="col-12">
+                    <div class="card">
+                      <canvas data-bind="attr: { id: $data.chartId }"></canvas>
+                      <button type="button" class="btn btn-outline-primary position-absolute top-0 start-0 mx-5 my-1" data-bind="click: function () { $data.resetZoom() }">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        Reset Zoom
+                      </button>
+                      <div class="card-body">
+                        <div class="d-grid">
+                          <div class="input-group mb-1">
+                            <select class="form-control" data-bind="options: $data.availableYAxes, value: $data.selectedYAxis, optionsCaption: 'Add Y-Axis...'"></select>
+                            <button class="btn btn-outline-secondary" type="button" data-bind="click: $data.addYAxis">
+                              <i class="fa-solid fa-plus"></i>
+                              Add Y-Axis
+                            </button>
+                          </div>
+                          <div class="input-group mb-1">
+                            <select class="form-control" data-bind="options: vm.csv.headers(), value: $data.xAxis, optionsCaption: 'Set X-Axis...'"></select>
+                          </div>
+                          <button class="btn btn-outline-danger" type="button" data-bind="click: $data.removeChart">
+                            <i class="fa-solid fa-trash"></i>
+                            Delete Chart
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-12">
+                    <div class="d-grid">
+                      <button class="btn btn-success" type="button" data-bind="click: vm.addChart">
+                        <i class="fa-solid fa-plus"></i>
+                        Add Chart
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-latest.js" integrity="sha512-2AL/VEauKkZqQU9BHgnv48OhXcJPx9vdzxN1JrKDVc4FPU/MEE/BZ6d9l0mP7VmvLsjtYwqiYQpDskK9dG8KBA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js" integrity="sha512-wUYbRPLV5zs6IqvWd88HIqZU/b8TBx+I8LEioQ/UC0t5EMCLApqhIAnUg7EsAzdbhhdgW07TqYDdH3QEXRcPOQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script type="text/javascript">
+      function uuidv4() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+        .replace(/[xy]/g, function (c) {
+            const r = Math.random() * 16 | 0, 
+                v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+      }
+      var vm = new function() {
+        var vm = this;
+
+        const csvRegex = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^"\\]*)*)"|([^,'"\s\\]*(?:\s+[^,'"\s\\]+)*))\s*(?:,|$)/g;
+
+        vm.selectedTabIndex = ko.observable(0);
+        vm.csv = {
+          encodings: ['UTF-8', 'UTF-16', 'ISO-8859-1'],
+          file: ko.observable(),
+          encoding: ko.observable(),
+          firstRowHeaders: ko.observable(true),
+          ignoreFirstRow: ko.observable(true),
+          headers: ko.observableArray([]),
+          data: ko.observableArray([]),
+        };
+
+        vm.pageLengths = [25,50,100,500,1000];
+        vm.table = {
+          pageLength: ko.observable(vm.pageLengths[0]),
+          currentPage: ko.observable(0),
+        };
+
+        vm.table.pagedData = ko.computed(function () {
+          return vm.csv.data.slice(vm.table.currentPage() * vm.table.pageLength(), (vm.table.currentPage() + 1) * vm.table.pageLength());
+        });
+
+        vm.table.pages = ko.computed(function () {
+          return Array.from(Array(Math.ceil(vm.csv.data().length / vm.table.pageLength())).keys());
+        });
+
+        vm.csv.parse = function(event) {
+          var data = [];
+          for (const line of event.target.result.split(/\r?\n/)) {
+            data.push([...line.matchAll(csvRegex)].map(colval=>colval[3]));
+          }
+          if (vm.csv.firstRowHeaders()) {
+            vm.csv.headers(data.shift());
+          } else {
+            vm.csv.headers(Array.from(Array(data[0].length).keys()));
+          }
+          if (vm.csv.ignoreFirstRow()) {
+            data.shift();
+          }
+          vm.table.currentPage(0);
+          vm.csv.data(data);
+        };
+
+        vm.csv.refresh = function() {
+          vm.charts().forEach(ea => ea.chart().destroy());
+          vm.charts([]);
+          vm.csv.headers([]);
+          vm.csv.data([]);
+
+          if (!vm.csv.file())
+            return;
+          const reader = new FileReader();
+          reader.addEventListener('load', vm.csv.parse);
+          reader.readAsText(vm.csv.file(), vm.csv.encoding());
+        };
+
+        vm.table.pageLength.subscribe(() => vm.table.currentPage(0));
+        vm.csv.file.subscribe(vm.csv.refresh);
+        vm.csv.encoding.subscribe(vm.csv.refresh);
+        vm.csv.firstRowHeaders.subscribe(vm.csv.refresh);
+        vm.csv.ignoreFirstRow.subscribe(vm.csv.refresh);
+
+
+        /* Chart "Class" */
+        function CsvChart() {
+          var result = {};
+          result.chartId = uuidv4();
+          result.chart = ko.observable(null);
+          result.xAxis = ko.observable(vm.rememberedXAxis());
+          result.yAxes = ko.observableArray([]);
+
+          result.selectedYAxis = ko.observable(null);
+
+          result.availableYAxes = ko.computed(function () {
+            return vm.csv.headers().filter(x => !result.yAxes().includes(x));
+          });
+
+          result.legendVisible = ko.observable(true);
+
+          result.addYAxis = function () {
+            if (!result.selectedYAxis()) return;
+            result.yAxes.push(result.selectedYAxis());
+            result.selectedYAxis(null);
+          };
+
+          result.removeChart = function () {
+            result.chart().destroy();
+            const ndx = vm.charts().findIndex(x => x.chartId == result.chartId);
+            vm.charts.splice(ndx);
+          };
+
+          result.resetZoom = function () {
+            result.chart().resetZoom();
+          };
+
+          result.refresh = function () {
+            if (!result.xAxis() || !result.yAxes().length) return;
+            if (result.chart() !== null) {
+              result.chart().destroy();
+            }
+
+            result.chart(new Chart(document.getElementById(result.chartId), {
+              type: 'line',
+              data: {
+                labels: vm.generateData(result.xAxis()),
+                datasets: [...result.yAxes()].map(function (ea) {
+                  return {
+                    label: ea,
+                    data: vm.generateData(ea)
+                  };
+                })
+              },
+              options: {
+                scales: {
+                  y: {
+                    beginAtZero: true
+                  }
+                },
+                plugins: {
+                  zoom: {
+                    pan:{
+                      enabled: true,
+                      modifierKey: 'ctrl'
+                    },
+                    zoom: {
+                      wheel: {
+                        enabled: true,
+                      },
+                      pinch: {
+                        enabled: true
+                      },
+                      drag: {
+                        enabled:true
+                      },
+                      mode: 'xy',
+                    }
+                  }
+                }
+              }
+            }));
+          };
+
+          result.xAxis.subscribe(function (val) {
+            vm.rememberedXAxis(val);
+            result.refresh(val);
+          });
+          result.yAxes.subscribe(result.refresh);
+
+          return result;
+        };
+
+        /* Chart Tab */
+        vm.charts = ko.observableArray([]);
+        vm.rememberedXAxis = ko.observable(null);
+        vm.addChart = function () {
+          vm.charts.push(CsvChart());
+        };
+        vm.generateData = function (field) {
+          const ndx = vm.csv.headers().indexOf(field);
+          return vm.csv.data().map(x => x[ndx]);
+        };
+      };
+      ko.applyBindings(vm);
+    </script>
+  </body>
+</html>
